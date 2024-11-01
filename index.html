@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kategorisasi Data</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .box {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 10px;
+            padding: 10px;
+            width: calc(45% - 20px);
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .box:hover {
+            background-color: #f0f0f0;
+        }
+        .dropdown {
+            display: none; /* Awalnya disembunyikan */
+            margin-top: 10px;
+        }
+        .user {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+        .toggle-button {
+            margin-top: 5px;
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Kategorisasi Data</h1>
+    <div class="container" id="dataContainer"></div>
+
+    <script>
+        // Mengambil data dari getOrganizationTree2.php
+        async function fetchData() {
+            try {
+                const response = await fetch('getOrganizationTree2.php', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                return data.data; // Kembalikan data dari respons
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Fungsi untuk membuat elemen dan menampilkannya
+        function createBox(item) {
+            const box = document.createElement('div');
+            box.className = 'box';
+            box.innerHTML = `<strong>${item.name}</strong>`;
+
+            const toggleButton = document.createElement('div');
+            toggleButton.className = 'toggle-button';
+            toggleButton.textContent = 'Lihat Detail';
+            toggleButton.onclick = function() {
+                const dropdown = box.querySelector('.dropdown');
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            };
+            box.appendChild(toggleButton);
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'dropdown';
+            box.appendChild(dropdown);
+
+            // Jika ada anak, buat kotak untuk anak-anak
+            if (item.children && item.children.length > 0) {
+                item.children.forEach(child => {
+                    const childBox = createBox(child);
+                    dropdown.appendChild(childBox);
+                });
+            }
+
+            // Jika ada pengguna, tampilkan pengguna dan tambahkan event click
+            if (item.users && item.users.length > 0) {
+                item.users.forEach(user => {
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'user';
+                    userDiv.innerHTML = `${user.name} (Akun: ${user.account})`;
+                    
+                    // Menambahkan event click untuk redirect ke getLatestCoords.php
+                    userDiv.onclick = function() {
+                        // Mengalihkan ke getLatestCoords.php dengan UID yang sesuai
+                        window.location.href = `getLatestCoords.php?uids=[${user.uid}]`;
+                    };
+                    
+                    dropdown.appendChild(userDiv);
+                });
+            }
+
+            return box;
+        }
+
+        // Fungsi untuk memuat data ke dalam container
+        async function loadData() {
+            const container = document.getElementById('dataContainer');
+            const data = await fetchData(); // Ambil data
+            if (data) {
+                data.forEach(item => {
+                    const box = createBox(item);
+                    container.appendChild(box);
+                });
+            } else {
+                container.innerHTML = '<p>Data tidak tersedia.</p>'; // Pesan jika tidak ada data
+            }
+        }
+
+        // Memanggil fungsi loadData untuk menampilkan data
+        loadData();
+    </script>
+</body>
+</html>
