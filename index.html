@@ -19,7 +19,7 @@
             border-radius: 5px;
             margin: 10px;
             padding: 10px;
-            width: calc(45% - 20px);
+            width: calc(60% - 15px);
             transition: background-color 0.3s;
             cursor: pointer;
         }
@@ -27,12 +27,13 @@
             background-color: #f0f0f0;
         }
         .dropdown {
-            display: none; /* Awalnya disembunyikan */
+            display: none; /* dropdown disembunyiin */
             margin-top: 10px;
         }
         .user {
             margin-left: 20px;
-            margin-top: 5px;
+            margin-top: 10px;
+            font-size: 15px;
         }
         .toggle-button {
             margin-top: 5px;
@@ -44,16 +45,21 @@
 </head>
 <body>
 
-    <h1>Kategorisasi Data</h1>
+    <h1>Kategorisasi Data GPS</h1>
     <div class="container" id="dataContainer"></div>
 
     <script>
-        // Mengambil data dari getOrganizationTree2.php
+        // URL API dan token autentikasi buat api
+        const apiUrl = "http://103.115.29.43:81/wapi/organization/getOrganizationTree2";
+        const token = "eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mjg5NzQ3NzAsInN1YiI6ImFkbWluIiwibG9naW5Vc2VyIjoie1wiaWRcIjpcIjE4MTc4MzgyNDM5NzkxOTg0NjRcIixcImFjY291bnRcIjpcIlBUX1NPR19JbmRvbmVzaWFcIixcIm5hbWVcIjpcIlNPRzMyMFwiLFwidHlwZVwiOlwiQkxPQ1wiLFwib2lkXCI6XCIxMlwiLFwicHdkRXhwaXJlZFwiOmZhbHNlfSJ9.t80GmAB8xLlHpGzr16k6VaZz08dJS1ReWmXlsc35OZo";
+
+        // Mengambil data dari API
         async function fetchData() {
             try {
-                const response = await fetch('getOrganizationTree2.php', {
+                const response = await fetch(apiUrl, {
                     method: 'GET',
                     headers: {
+                        'token': token,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -69,7 +75,7 @@
             }
         }
 
-        // Fungsi untuk membuat elemen dan menampilkannya
+        // Fungsi untuk membuat elemen dan menampilkannya yang di kategoriin
         function createBox(item) {
             const box = document.createElement('div');
             box.className = 'box';
@@ -88,7 +94,7 @@
             dropdown.className = 'dropdown';
             box.appendChild(dropdown);
 
-            // Jika ada anak, buat kotak untuk anak-anak
+            // Jika ada dropdown, buat kotak untuk dikategorikan
             if (item.children && item.children.length > 0) {
                 item.children.forEach(child => {
                     const childBox = createBox(child);
@@ -96,23 +102,22 @@
                 });
             }
 
-            // Jika ada pengguna, tampilkan pengguna dan tambahkan event click
-            if (item.users && item.users.length > 0) {
-                item.users.forEach(user => {
-                    const userDiv = document.createElement('div');
-                    userDiv.className = 'user';
-                    userDiv.innerHTML = `${user.name} (Akun: ${user.account})`;
-                    
-                    // Menambahkan event click untuk redirect ke getLatestCoords.php
-                    userDiv.onclick = function() {
-                        // Mengalihkan ke getLatestCoords.php dengan UID yang sesuai
-                        window.location.href = `getLatestCoords.php?uids=[${user.uid}]`;
-                    };
-                    
-                    dropdown.appendChild(userDiv);
-                });
-            }
-
+// Jika ada pengguna, tampilkan pengguna dan tambahkan event click new window
+if (item.users && item.users.length > 0) {
+    item.users.forEach(user => {
+        const userDiv = document.createElement('div');
+        userDiv.className = 'user';
+        userDiv.innerHTML = `${user.name} (Akun: ${user.account})`;
+        
+        // Menambahkan event pake js click untuk membuka getLatestCoords.php di jendela baru
+        userDiv.onclick = function() {
+            // Mengalihkan ke getLatestCoords.php dengan UID yang sesuai di jendela baru
+            window.open(`getLatestCoords.php?uids=[${user.uid}]`, '_blank');
+        };
+        
+        dropdown.appendChild(userDiv);
+    });
+}
             return box;
         }
 
@@ -126,7 +131,7 @@
                     container.appendChild(box);
                 });
             } else {
-                container.innerHTML = '<p>Data tidak tersedia.</p>'; // Pesan jika tidak ada data
+                container.innerHTML = '<p>Upss data ga ada nih.</p>'; // Pesan jika tidak ada data
             }
         }
 
